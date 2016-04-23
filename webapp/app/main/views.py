@@ -48,6 +48,21 @@ def get_client():
         return json.dumps("Client was previously initalized")
 
 
+def send_color():
+    set_client(current_app)
+
+    red = session.get('red', 0)
+    green = session.get('green', 0)
+    blue = session.get('blue', 0)
+    print("RGB: %f,%f,%f" % (red, green, blue))
+
+    msg = HMTLprotocol.get_rgb_msg(HMTLprotocol.BROADCAST,
+                                   HMTLprotocol.OUTPUT_ALL_OUTPUTS,
+                                   int(red / 100.0 * 255),
+                                   int(green / 100.0 * 255),
+                                   int(blue / 100. * 255))
+    current_app.da_client.send_and_ack(msg, False)
+
 @main.route('/rgb', methods=['GET', 'POST'])
 def rgb():
     red = session.get('red', 0)
@@ -68,18 +83,21 @@ def rgb():
 
         return redirect(url_for('.rgb'))
 
-    print("RGB: %f,%f,%f" % (red, green, blue))
+    send_color()
 
-    set_client(current_app)
-
-    msg = HMTLprotocol.get_rgb_msg(HMTLprotocol.BROADCAST,
-                                   HMTLprotocol.OUTPUT_ALL_OUTPUTS,
-                                   int(red / 100.0 * 255),
-                                   int(green / 100.0 * 255),
-                                   int(blue / 100. * 255))
-    current_app.da_client.send_and_ack(msg, False)
     return render_template('rgb.html',
                            form=form,
                            red=red,
                            green=green,
                            blue=blue)
+
+
+@main.route('/rgb/set', methods=['GET'])
+def set_rgb():
+    session['red'] = int(request.args.get('red', 0))
+    session['green'] = int(request.args.get('green', 0))
+    session['blue'] = int(request.args.get('blue', 0))
+
+    send_color()
+
+    return json.dumps({"red":session['red'], "green":session['green'], "blue":session['blue']})

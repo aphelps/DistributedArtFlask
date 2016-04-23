@@ -1,11 +1,28 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+<script>
+function update_red(age) {
+  var url = 'http://localhost:5000/rgb/set?red=100'
+  client.open("GET", url, true);
+  client.send(null);
+}
+</script>
+
 {% block title %}Distribued Art - RGB Command{% endblock %}
 
 {% block page_content %}
 <div class="page-header">
     <h1>Current color: {{red}}, {{green}}, {{blue}}</h1>
 </div>
-{{ wtf.quick_form(form) }}
+<form class="form form-horizontal" method="post" role="form">
+  {{ form.csrf_token }}
+  {{ form.hidden_tag() }}
+  {{ wtf.form_errors(form, hiddens="only") }}
+
+  {{ wtf.form_field(form.red, oninput="update_red(value)") }}
+  {{ wtf.form_field(form.green) }}
+  {{ wtf.form_field(form.blue) }}
+  {{ wtf.form_field(form.submit) }}
+</form>
 {% endblock %}
