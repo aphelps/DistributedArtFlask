@@ -33,9 +33,21 @@ def index():
                            known=session.get('known', False))
 
 
+@main.route('/clear_programs')
+def clear_programs():
+    print("Sending command to clear all programs")
+    msg = HMTLprotocol.get_program_none_msg(HMTLprotocol.BROADCAST,
+                                   HMTLprotocol.OUTPUT_ALL_OUTPUTS)
+    current_app.da_client.send_and_ack(msg, False)
+    return json.dumps("Cleared")
+
+
 def set_client(app):
     if not app.da_client:
         app.da_client = create_client(app.address)
+
+        # Clear any running programs
+        clear_programs()
         return True
     return False
 
@@ -62,6 +74,8 @@ def send_color():
                                    int(green / 100.0 * 255),
                                    int(blue / 100. * 255))
     current_app.da_client.send_and_ack(msg, False)
+
+
 
 @main.route('/rgb', methods=['GET', 'POST'])
 def rgb():
@@ -101,3 +115,4 @@ def set_rgb():
     send_color()
 
     return json.dumps({"red":session['red'], "green":session['green'], "blue":session['blue']})
+
