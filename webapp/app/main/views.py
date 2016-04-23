@@ -1,18 +1,23 @@
 from flask import render_template, session, redirect, url_for, current_app, request
-from .. import db
+from .. import db, auto
 from ..models import User
 from ..email import send_email
 from . import main
 from .forms import NameForm, RGBForm
-from connectors.client import create_client
 
-from colour import Color
-
-import hmtl.HMTLprotocol as HMTLprotocol
+from connectors.client import get_client
 
 import json
 
+
+
+@main.route('/documentation')
+def documentation():
+    return auto.html()
+
+
 @main.route('/', methods=['GET', 'POST'])
+@auto.doc()
 def index():
     form = NameForm()
     if form.validate_on_submit():
@@ -33,71 +38,45 @@ def index():
                            known=session.get('known', False))
 
 
-@main.route('/clear_programs')
-def clear_programs():
-    print("Sending command to clear all programs")
-    msg = HMTLprotocol.get_program_none_msg(HMTLprotocol.BROADCAST,
-                                   HMTLprotocol.OUTPUT_ALL_OUTPUTS)
-    current_app.da_client.send_and_ack(msg, False)
-    return json.dumps("Cleared")
-
-
-def set_client(app):
-    if not app.da_client:
-        app.da_client = create_client(app.address)
-
-        # Clear any running programs
-        clear_programs()
-        return True
-    return False
-
-
 @main.route('/client', methods=['GET'])
-def get_client():
-    if set_client(current_app):
-        return json.dumps("Created client")
+@auto.doc()
+def client():
+    if not current_app.client:
+        current_app.client = get_client(current_app.address)
+
+    if current_app.client.is_connected():
+        return json.dumps("Client was already connected")
     else:
-        return json.dumps("Client was previously initalized")
-
-
-def send_color():
-    set_client(current_app)
-
-    red = session.get('red', 0)
-    green = session.get('green', 0)
-    blue = session.get('blue', 0)
-    print("RGB: %f,%f,%f" % (red, green, blue))
-
-    msg = HMTLprotocol.get_rgb_msg(HMTLprotocol.BROADCAST,
-                                   HMTLprotocol.OUTPUT_ALL_OUTPUTS,
-                                   int(red / 100.0 * 255),
-                                   int(green / 100.0 * 255),
-                                   int(blue / 100. * 255))
-    current_app.da_client.send_and_ack(msg, False)
-
+        if current_app.client.connect():
+            return json.dumps("Client is now connected")
+        else:
+            return json.dumps("Client failed to connect")
 
 
 @main.route('/rgb', methods=['GET', 'POST'])
+@auto.doc()
 def rgb():
+    client()
+
     red = session.get('red', 0)
     green = session.get('green', 0)
     blue = session.get('blue', 0)
-    form = RGBForm(red=red, green=green, blue=blue)
+    form = RGBForm(red=(red / 255.0 * 100),
+                   green=(green / 255.0 * 100),
+                   blue=(blue / 255.0 * 100))
 
     if form.validate_on_submit():
         # Form submitted
-        session['red'] = int(form.red.data)
-        session['green'] = int(form.green.data)
-        session['blue'] = int(form.blue.data)
-        # session['red'] = form.color.data.red
-        # session['blue'] = form.color.data.blue
-        # session['green'] = form.color.data.green
+        session['red'] = int(form.red.data) / 100.0 * 255
+        session['green'] = int(form.green.data) / 100.0 * 255
+        session['blue'] = int(form.blue.data) / 100.0 * 255
 
-        print("Sliders: %d" % form.red.data)
+        current_app.client.send_rgb(session['red'],
+                                    session['green'],
+                                    session['blue'])
 
+        # Redirect will send back to here and update the display
         return redirect(url_for('.rgb'))
-
-    send_color()
 
     return render_template('rgb.html',
                            form=form,
@@ -105,14 +84,69 @@ def rgb():
                            green=green,
                            blue=blue)
 
+@main.route('/snake', methods=['GET', 'POST'])
+@auto.doc()
+def snake():
+    client()
+
+    red = session.get('red', 0)
+    green = session.get('green', 0)
+    blue = session.get('blue', 0)
+
+    form = RGBForm(red=(red / 255.0 * 100),
+                   green=(green / 255.0 * 100),
+                   blue=(blue / 255.0 * 100))
+
+    if form.validate_on_submit():
+        # Form submitted
+        session['red'] = int(form.red.data) / 100.0 * 255
+        session['green'] = int(form.green.data) / 100.0 * 255
+        session['blue'] = int(form.blue.data) / 100.0 * 255
+        session['period'] = 100
+        session['colormode'] = 0
+
+        current_app.client.send_snake((session['red'],
+                                       session['green'],
+                                       session['blue']),
+                                       session['period'],
+                                       session['colormode']
+                                      )
+
+        # Redirect will send back to here and update the display
+        return redirect(url_for('.snake'))
+
+    return render_template('snake.html',
+                           form=form,
+                           red=red,
+                           green=green,
+                           blue=blue)
+
+
+#
+# Basic REST API
+#
 
 @main.route('/rgb/set', methods=['GET'])
+@auto.doc()
 def set_rgb():
+    client()
+
     session['red'] = int(request.args.get('red', 0))
     session['green'] = int(request.args.get('green', 0))
     session['blue'] = int(request.args.get('blue', 0))
 
-    send_color()
+    current_app.client.send_rgb(session['red'],
+                                session['green'],
+                                session['blue'])
 
-    return json.dumps({"red":session['red'], "green":session['green'], "blue":session['blue']})
+    return json.dumps({"red":session['red'],
+                       "green":session['green'],
+                       "blue":session['blue']})
 
+@main.route('/clear_programs')
+@auto.doc()
+def clear_programs():
+    client()
+
+    current_app.client.send_clear_programs()
+    return json.dumps("Cleared")
