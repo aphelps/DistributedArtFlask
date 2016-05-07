@@ -3,8 +3,10 @@ import time
 from hmtl.client import HMTLClient
 import hmtl.HMTLprotocol as HMTLprotocol
 from hmtl.TrianglePrograms import TriangleSnake,TriangleStatic
+from state import State
 
 server_client = None
+
 
 def get_client(address):
     """Get a singleton device client"""
@@ -15,6 +17,10 @@ def get_client(address):
 
 
 class Client:
+    """
+    This class controls a connection to a hmtl server as well as tracking
+    the state of the devices it is connected to.
+    """
 
     def __init__(self, address, verbose=False):
         self.address = address
@@ -24,6 +30,8 @@ class Client:
 
         # Attempt to connect to the address
         self.connect()
+
+        self.state = State()
 
     def connect(self, force_reconnect = False):
         if self.is_connected() and not force_reconnect:
