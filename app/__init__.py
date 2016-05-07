@@ -28,4 +28,10 @@ def create_app(config_name):
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
+    from .modes import modes as modes_blueprint
+    app.register_blueprint(modes_blueprint)
+
+    from .api import api as api_blueprint
+    app.register_blueprint(api_blueprint)
+
     return app

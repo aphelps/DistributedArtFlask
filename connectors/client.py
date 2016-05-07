@@ -9,7 +9,9 @@ server_client = None
 
 
 def get_client(address):
-    """Get a singleton device client"""
+    """
+    Get a singleton device client
+    """
     global server_client
     if server_client is None:
         server_client = Client(address=address, verbose=True)
