@@ -3,19 +3,11 @@ import time
 from hmtl.client import HMTLClient
 import hmtl.HMTLprotocol as HMTLprotocol
 from hmtl.TrianglePrograms import TriangleSnake,TriangleStatic
-from state import State
-
-server_client = None
+from state import ModuleState
 
 
-def get_client(address):
-    """
-    Get a singleton device client
-    """
-    global server_client
-    if server_client is None:
-        server_client = Client(address=address, verbose=True)
-    return server_client
+class ClientDisconnectedException(Exception):
+    pass
 
 
 class Client:
@@ -29,11 +21,7 @@ class Client:
         self.hmtl_client = None
         self.verbose = verbose
         self.cleared = False
-
-        # Attempt to connect to the address
-        self.connect()
-
-        self.state = State()
+        self.state = ModuleState(self)
 
     def connect(self, force_reconnect = False):
         if self.is_connected() and not force_reconnect:
@@ -49,6 +37,7 @@ class Client:
             print("* Creating HMTL Client.  address=%s" % self.address)
             self.hmtl_client = HMTLClient(address=self.address,
                                           verbose=self.verbose)
+            self.state.reset()
             return True
         except Exception as e:
             print("ERROR: Failed to create client: %s" % e)
@@ -56,6 +45,9 @@ class Client:
             return False
 
     def send_msg(self, msg, expect_response=False):
+        if not self.is_connected():
+            raise ClientDisconnectedException("Client is not connected")
+
         start_time = time.time()
         self.hmtl_client.send_and_ack(msg, expect_response)
         end_time = time.time()
@@ -63,9 +55,6 @@ class Client:
 
     def is_connected(self):
         return self.hmtl_client is not None
-
-    def is_cleared(self):
-        return self.cleared
 
     def send_clear_programs(self):
         print("Client: Sending command to clear all programs")
@@ -77,15 +66,7 @@ class Client:
         return True
 
     def send_rgb(self, red, green, blue):
-        if not self.is_connected():
-            print("ERROR: Client is not connected")
-            return False
-
-        if not self.is_cleared():
-            self.send_clear_programs()
-
         print("Client: sending rgb %f,%f,%f" % (red, green, blue))
-
         self.send_msg(
             HMTLprotocol.get_rgb_msg(HMTLprotocol.BROADCAST,
                                      HMTLprotocol.OUTPUT_ALL_OUTPUTS,

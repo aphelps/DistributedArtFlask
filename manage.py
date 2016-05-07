@@ -31,7 +31,7 @@ def test():
 @manager.option("-a", "--address", default="localhost", help="Address of DA Command Server to connect to")
 def run(address):
     print("RUNNING")
-    app.address = address
+    app.config["DISTRIBUTED_SERVER_ADDRESS"] = address
     app.run(host="0.0.0.0")
 
 

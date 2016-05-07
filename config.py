@@ -14,6 +14,7 @@ class Config:
     FLASKY_MAIL_SENDER = 'Flasky Admin <flasky@example.com>'
     FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN')
     BOOTSTRAP_SERVE_LOCAL = True
+    DISTRIBUTED_SERVER_ADDRESS = "localhost"
 
     @staticmethod
     def init_app(app):

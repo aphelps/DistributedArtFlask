@@ -2,14 +2,12 @@ from flask import render_template, session, redirect, url_for, current_app, requ
 from .. import auto
 from . import modes
 from .forms import RGBForm
-from ..api.routes import client
-
+from connectors import connected
 
 @modes.route('/rgb', methods=['GET', 'POST'])
 @auto.doc()
+@connected
 def rgb():
-    client()
-
     red = session.get('red', 0)
     green = session.get('green', 0)
     blue = session.get('blue', 0)
@@ -23,7 +21,7 @@ def rgb():
         session['green'] = int(form.green.data) / 100.0 * 255
         session['blue'] = int(form.blue.data) / 100.0 * 255
 
-        current_app.client.send_rgb(session['red'],
+        current_app.client.state.rgb(session['red'],
                                     session['green'],
                                     session['blue'])
 
@@ -39,9 +37,8 @@ def rgb():
 
 @modes.route('/snake', methods=['GET', 'POST'])
 @auto.doc()
+@connected
 def snake():
-    client()
-
     red = session.get('red', 0)
     green = session.get('green', 0)
     blue = session.get('blue', 0)
@@ -58,7 +55,7 @@ def snake():
         session['period'] = 100
         session['colormode'] = 0
 
-        current_app.client.send_snake((session['red'],
+        current_app.client.state.snake((session['red'],
                                        session['green'],
                                        session['blue']),
                                        session['period'],
