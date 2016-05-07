@@ -1,4 +1,4 @@
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, current_app
 from flask.ext.login import login_user, logout_user, login_required, \
     current_user
 from . import auth
@@ -7,7 +7,6 @@ from ..models import User
 from ..email import send_email
 from .forms import LoginForm, RegistrationForm, ChangePasswordForm,\
     PasswordResetRequestForm, PasswordResetForm, ChangeEmailForm
-
 
 @auth.before_app_request
 def before_request():
@@ -29,7 +28,10 @@ def unconfirmed():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        # Try looking the user up by email then by username
+        user = User.query.filter_by(email=form.login.data).first()
+        if user is None:
+            user = User.query.filter_by(username=form.login.data).first()
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             return redirect(request.args.get('next') or url_for('main.index'))
@@ -54,10 +56,18 @@ def register():
                     password=form.password.data)
         db.session.add(user)
         db.session.commit()
-        token = user.generate_confirmation_token()
-        send_email(user.email, 'Confirm Your Account',
-                   'auth/email/confirm', user=user, token=token)
-        flash('A confirmation email has been sent to you by email.')
+
+        if current_app.config.get('USE_EMAIL_CONFIRMATION', False):
+            # Send email to get user confirmation
+            token = user.generate_confirmation_token()
+            send_email(user.email, 'Confirm Your Account',
+                       'auth/email/confirm', user=user, token=token)
+            flash('A confirmation email has been sent to you by email.')
+            return redirect(url_for('auth.login'))
+        else:
+            # Immediately confirm the new account
+            user.confirm_immediate()
+
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
 
