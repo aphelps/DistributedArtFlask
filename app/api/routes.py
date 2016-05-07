@@ -18,9 +18,9 @@ def set_rgb():
     session['green'] = int(request.args.get('green', 0))
     session['blue'] = int(request.args.get('blue', 0))
 
-    current_app.client.state.send_rgb(session['red'],
-                                      session['green'],
-                                      session['blue'])
+    current_app.state.send_rgb(session['red'],
+                               session['green'],
+                               session['blue'])
 
     return json.dumps({"red":session['red'],
                        "green":session['green'],
@@ -31,5 +31,5 @@ def set_rgb():
 @auto.doc()
 @connected
 def clear_programs():
-    current_app.client.state.send_clear_programs()
+    current_app.state.send_clear_programs()
     return json.dumps("Cleared")

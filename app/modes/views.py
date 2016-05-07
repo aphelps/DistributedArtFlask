@@ -21,7 +21,7 @@ def rgb():
         session['green'] = int(form.green.data) / 100.0 * 255
         session['blue'] = int(form.blue.data) / 100.0 * 255
 
-        current_app.client.state.rgb(session['red'],
+        current_app.state.rgb(session['red'],
                                     session['green'],
                                     session['blue'])
 
@@ -55,7 +55,7 @@ def snake():
         session['period'] = 100
         session['colormode'] = 0
 
-        current_app.client.state.snake((session['red'],
+        current_app.state.snake((session['red'],
                                        session['green'],
                                        session['blue']),
                                        session['period'],
