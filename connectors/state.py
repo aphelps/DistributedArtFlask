@@ -23,6 +23,7 @@ class ModuleState:
     def __init__(self, client):
         self.state = STATE_UNKNOWN
         self.client = client
+        self.address = HMTLprotocol.BROADCAST
 
     def reset(self):
         self.state = STATE_UNKNOWN
@@ -30,7 +31,7 @@ class ModuleState:
     def clear(self):
         """Send a message to clear any currently running program"""
         self.client.send_msg(
-            HMTLprotocol.get_program_none_msg(HMTLprotocol.BROADCAST,
+            HMTLprotocol.get_program_none_msg(self.address,
                                               HMTLprotocol.OUTPUT_ALL_OUTPUTS)
         )
         self.state = STATE_NONE
@@ -40,7 +41,7 @@ class ModuleState:
         if is_program_state(self.state):
             self.clear()
         self.client.send_msg(
-            HMTLprotocol.get_rgb_msg(HMTLprotocol.BROADCAST,
+            HMTLprotocol.get_rgb_msg(self.address,
                                      HMTLprotocol.OUTPUT_ALL_OUTPUTS,
                                      red, green, blue)
         )
@@ -49,7 +50,7 @@ class ModuleState:
     def snake(self, bg, period, colormode):
         snake = TriangleSnake(period, bg, colormode)
         self.client.send_msg(
-            snake.msg(HMTLprotocol.BROADCAST,
+            snake.msg(self.address,
                       HMTLprotocol.OUTPUT_ALL_OUTPUTS)
         )
 

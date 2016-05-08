@@ -66,7 +66,7 @@ def register():
             return redirect(url_for('auth.login'))
         else:
             # Immediately confirm the new account
-            user.confirm_immediate()
+            user.confirm(None)
 
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
@@ -77,7 +77,7 @@ def register():
 def confirm(token):
     if current_user.confirmed:
         return redirect(url_for('main.index'))
-    if current_user.confirm(token):
+    if token is not None and current_user.confirm(token):
         flash('You have confirmed your account. Thanks!')
     else:
         flash('The confirmation link is invalid or has expired.')

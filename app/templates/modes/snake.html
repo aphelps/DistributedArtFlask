@@ -5,16 +5,14 @@
 
 {% block page_content %}
 <div class="page-header">
-    <h1>Background color: {{red}}, {{green}}, {{blue}}</h1>
+  <h1>Background color: {{red}}, {{green}}, {{blue}}</h1>
+  <h1>Period: {{period}}  Colormode: {{colormode}} </h1>
 </div>
 <form class="form form-horizontal" method="post" role="form">
   {{ form.csrf_token }}
   {{ form.hidden_tag() }}
   {{ wtf.form_errors(form, hiddens="only") }}
 
-  {{ wtf.form_field(form.red, oninput="update_red(value)") }}
-  {{ wtf.form_field(form.green) }}
-  {{ wtf.form_field(form.blue) }}
-  {{ wtf.form_field(form.submit) }}
+  {{ wtf.quick_form(form) }}
 </form>
 {% endblock %}

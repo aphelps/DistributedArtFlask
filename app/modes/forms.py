@@ -30,4 +30,30 @@ class RGBForm(Form):
         DEFAULT_GREEN = kwargs.get('green', 0)
         DEFAULT_BLUE = kwargs.get('blue', 0)
         # DEFAULT_COLOR = Color(rgb=(DEFAULT_RED, DEFAULT_GREEN, DEFAULT_BLUE))
-        print("FORM: %s,%s,%s" % (DEFAULT_RED, DEFAULT_GREEN, DEFAULT_BLUE))
+        print("RGBForm: color:%s,%s,%s" % (DEFAULT_RED, DEFAULT_GREEN, DEFAULT_BLUE))
+
+
+class SnakeForm(Form):
+    DEFAULT_RED = 0
+    DEFAULT_GREEN = 0
+    DEFAULT_BLUE = 0
+    DEFAULT_PERIOD = 100
+    DEFAULT_MODE = 0
+
+    red = DecimalRangeField('Red', default=DEFAULT_RED)
+    green = DecimalRangeField('Green', default=DEFAULT_GREEN)
+    blue = DecimalRangeField('Blue', default=DEFAULT_BLUE)
+    period = DecimalRangeField('Period (ms)', default=DEFAULT_PERIOD)
+    colormode = DecimalRangeField('Colormode', default=DEFAULT_MODE)
+
+    submit = SubmitField('Submit')
+
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+        DEFAULT_RED = kwargs.get('red', 0)
+        DEFAULT_GREEN = kwargs.get('green', 0)
+        DEFAULT_BLUE = kwargs.get('blue', 0)
+        DEFAULT_PERIOD = kwargs.get('period', 100)
+        DEFAULT_MODE = kwargs.get('colormode', 0)
+        print("SnakeForm: bgcolor:%s,%s,%s period:%s mode:%s" %
+              (DEFAULT_RED, DEFAULT_GREEN, DEFAULT_BLUE, DEFAULT_PERIOD, DEFAULT_MODE))
