@@ -34,6 +34,12 @@ def rgb():
                            green=green,
                            blue=blue)
 
+@modes.route('/blink', methods=['GET', 'POST'])
+@auto.doc()
+@connected
+def blink():
+    pass
+
 
 @modes.route('/snake', methods=['GET', 'POST'])
 @auto.doc()

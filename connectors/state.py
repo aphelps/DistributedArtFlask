@@ -5,14 +5,13 @@ STATE_UNKNOWN = -1
 STATE_NONE = 0
 STATE_RGB = 1
 STATE_SNAKE = 2
-
+STATE_BLINK = 3
 
 def is_program_state(state):
-    if state == STATE_UNKNOWN:
-        return True
-    if state == STATE_SNAKE:
-        return True
-    return False
+    if state == STATE_RGB:
+        return False
+
+    return True
 
 
 class ModuleState:
@@ -46,6 +45,17 @@ class ModuleState:
                                      red, green, blue)
         )
         self.state = STATE_RGB
+
+    def blink(self, on_period, on_color, off_period, off_color):
+        self.client.send_msg(
+            HMTLprotocol.get_program_blink_msg(self.address,
+                                     HMTLprotocol.OUTPUT_ALL_OUTPUTS,
+                                               on_period,
+                                               on_color,
+                                               off_period,
+                                               off_color)
+        )
+        self.state = STATE_BLINK
 
     def snake(self, bg, period, colormode):
         snake = TriangleSnake(period, bg, colormode)
